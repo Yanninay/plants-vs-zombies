@@ -22,6 +22,8 @@ PLAYER_MOVE_RATE = 15
 BULLET_SPEED = 10
 ADD_NEW_BULLET_RATE = 15
 
+FUN = True
+
 TEXTCOLOR = (255, 255, 255)
 RED = (255, 0, 0)
 
@@ -157,7 +159,7 @@ while True:
                                     zombieSize),
                 'surface': pygame.transform.scale(zombieImage, (zombieSize, zombieSize)),
             }
-
+        
             zombies.append(newZombie)
 
         newKindZombieAddCounter += 1
@@ -239,6 +241,16 @@ while True:
         
         drawText('Zombie gotten pass: %s' % zombiesGottenPast, font, windowSurface, 10, 20)
         drawText('Score: %s' % score, font, windowSurface, 10, 50)
+        if score >= 10 and score < 15:
+            fun = pygame.image.load("fun.gif")
+            windowSurface.blit(fun, (0,0))
+            NORMAL_ZOMBIE_SPEED = 3
+        elif score >= 20 and score < 23:
+            fun2 = pygame.image.load("fun2.png")
+            windowSurface.blit(fun2, (0,0))
+            NEW_KIND_ZOMBIE_SPEED = 3
+
+        
 
         pygame.display.update()
 
@@ -254,6 +266,8 @@ while True:
 
     time.sleep(1)
     if zombiesGottenPast >= MAX_GOTTEN_PASS:
+        NORMAL_ZOMBIE_SPEED = 1
+        NORMAL_ZOMBIE_SPEED / 1
         windowSurface.blit(rescaledBackground, (0, 0))
         windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
         drawText('Score: %s' % score, font, windowSurface, 10, 30)
@@ -265,6 +279,8 @@ while True:
         pygame.display.update()
         wait_for_player_to_press_key()
     if player_has_hit_zombie(playerRect, zombies):
+        NORMAL_ZOMBIE_SPEED = 1
+        NORMAL_ZOMBIE_SPEED / 1
         windowSurface.blit(rescaledBackground, (0, 0))
         windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
         drawText('Score: %s' % score, font, windowSurface, 10, 30)
