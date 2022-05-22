@@ -3,12 +3,15 @@ import random
 import sys
 import time
 from pygame.locals import *
+from pygame import mixer
 pygame.init()
-
+pygame.mixer.init()
 
 WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 600
 FPS = 60
+
+DEFAULT_MUSIC = "grasswalk.ogg"
 
 MAX_GOTTEN_PASS = 10
 ZOMBIE_SIZE = 70
@@ -22,10 +25,11 @@ PLAYER_MOVE_RATE = 15
 BULLET_SPEED = 10
 ADD_NEW_BULLET_RATE = 15
 
-FUN = True
-
 TEXTCOLOR = (255, 255, 255)
 RED = (255, 0, 0)
+
+Music = True
+MUST_KILL = 100 # I created this variable solely for the convenience of showing this project. This means that you can change the number of zombies you need to kill at any time, thereby making it easier to present yourself (you won't have to score 100 points for a long time)
 
 
 def terminate():
@@ -33,7 +37,10 @@ def terminate():
     sys.exit()
 
 
-def wait_for_player_to_press_key():
+def waitForPlayerKeyPress():
+    global Music
+    global MUST_KILL
+    global DEFAULT_MUSIC
     while True:
         for event_ in pygame.event.get():
             if event_.type == QUIT:
@@ -43,9 +50,27 @@ def wait_for_player_to_press_key():
                     terminate()
                 if event_.key == K_RETURN:
                     return
+                if event_.key == K_t:
+                    print('Welcome to Plants VS Zombies. This is the game Plants VS Zombies developed by Yanninay. Settings:\nM - music off\nL - developer mode\nG - Github')
+                if event_.key == K_m:
+                    if not Music:
+                        main_menu.play()
+                        Music = True
+                    else:
+                        main_menu.stop()
+                        fun_music.stop()
+                        Music = False
+                if event_.key == K_l:
+                    MUST_KILL = int(input("Hi, Developer. Enter the number of zombies you need to kill "))
+                    print("Okay, now you need to kill", MUST_KILL, "zombies to speed up the game. But keep in mind, I'll return the number of zombies you need to kill to the previous value, to make it easier for you to play.")
+                if event_.key == K_g:
+                    print("https://github.com/Yanninay/plants-vs-zombies")
+
+                    
 
 
-def player_has_hit_zombie(player_rect, zombies_list):
+
+def playerHasHitZombie(player_rect, zombies_list):
     for zombie in zombies_list:
         if player_rect.colliderect(zombie['rect']):
             return True
@@ -97,13 +122,25 @@ newKindZombieImage = pygame.image.load('ConeheadZombieAttack.gif')
 backgroundImage = pygame.image.load('background.png')
 rescaledBackground = pygame.transform.scale(backgroundImage, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
+main_menu = pygame.mixer.Sound("awesomeness.ogg")
+fun_music = pygame.mixer.Sound("speedrun.ogg")
+main = pygame.mixer.Sound(DEFAULT_MUSIC)
+main_menu.play()
+
+
+
 windowSurface.blit(rescaledBackground, (0, 0))
 windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
 drawText('Zombie VS Plants By Yanninay', font, windowSurface, (WINDOW_WIDTH / 4), (WINDOW_HEIGHT / 4))
 drawText('Press Enter to start', font, windowSurface, (WINDOW_WIDTH / 3) - 10, (WINDOW_HEIGHT / 3) + 50)
+drawText('Press T for settings', font, windowSurface, (WINDOW_WIDTH / 3) - 40, (WINDOW_HEIGHT / 3) + 90)
 pygame.display.update()
-wait_for_player_to_press_key()
+waitForPlayerKeyPress()
 while True:
+    if Music:
+        main_menu.stop()
+        main.play()
+
 
     zombies = []
     newKindZombies = []
@@ -113,7 +150,6 @@ while True:
     score = 0
 
     playerRect.topleft = (50, WINDOW_HEIGHT / 2)
-    moveLeft = moveRight = False
     moveUp = moveDown = False
     shoot = False
 
@@ -127,28 +163,41 @@ while True:
             if event.type == QUIT:
                 terminate()
 
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_UP or event.key == ord('w'):
                     moveDown = False
                     moveUp = True
-                if event.key == K_DOWN or event.key == ord('s'):
+                elif event.key == K_DOWN or event.key == ord('s'):
                     moveUp = False
                     moveDown = True
 
-                if event.key == K_SPACE:
+                elif event.key == K_SPACE:
                     shoot = True
+    
 
-            if event.type == KEYUP:
+            elif event.type == KEYUP:
                 if event.key == K_ESCAPE:
                     terminate()
-
-                if event.key == K_UP or event.key == ord('w'):
+                elif event.key == K_UP or event.key == ord('w'):
                     moveUp = False
-                if event.key == K_DOWN or event.key == ord('s'):
+                elif event.key == K_DOWN or event.key == ord('s'):
                     moveDown = False
 
-                if event.key == K_SPACE:
+                elif event.key == K_SPACE:
                     shoot = False
+                elif event.key == K_m:
+                    if Music:
+                        fun_music.stop()
+                        main.stop()
+                        Music = False
+                    else:
+                        if score >= 100:
+                            fun_music.play()
+                            Music = True
+                        else:
+                            main.play()
+                            Music = True
+
 
         zombieAddCounter += 1
         if zombieAddCounter == ADD_NEW_KIND_ZOMBIE:
@@ -188,7 +237,6 @@ while True:
             playerRect.move_ip(0, -1 * PLAYER_MOVE_RATE)
         if moveDown and playerRect.bottom < WINDOW_HEIGHT - 10:
             playerRect.move_ip(0, PLAYER_MOVE_RATE)
-
   
         for z in zombies:
             z['rect'].move_ip(-1 * NORMAL_ZOMBIE_SPEED, 0)
@@ -241,22 +289,21 @@ while True:
         
         drawText('Zombie gotten pass: %s' % zombiesGottenPast, font, windowSurface, 10, 20)
         drawText('Score: %s' % score, font, windowSurface, 10, 50)
-        if score >= 10 and score < 15:
-            fun = pygame.image.load("fun.gif")
-            windowSurface.blit(fun, (0,0))
+        if score >= MUST_KILL:
+            if Music:
+                main.stop()
+                fun_music.play()
             NORMAL_ZOMBIE_SPEED = 3
-        elif score >= 20 and score < 23:
-            fun2 = pygame.image.load("fun2.png")
-            windowSurface.blit(fun2, (0,0))
+        elif score >= 200:
             NEW_KIND_ZOMBIE_SPEED = 3
 
         
 
         pygame.display.update()
 
-        if player_has_hit_zombie(playerRect, zombies):
+        if playerHasHitZombie(playerRect, zombies):
             break
-        if player_has_hit_zombie(playerRect, newKindZombies):
+        if playerHasHitZombie(playerRect, newKindZombies):
             break
 
         if zombiesGottenPast >= MAX_GOTTEN_PASS:
@@ -268,6 +315,11 @@ while True:
     if zombiesGottenPast >= MAX_GOTTEN_PASS:
         NORMAL_ZOMBIE_SPEED = 1
         NORMAL_ZOMBIE_SPEED / 1
+        MUST_KILL = 100
+        if Music:
+            fun_music.stop()
+            main.stop()
+            main_menu.play()
         windowSurface.blit(rescaledBackground, (0, 0))
         windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
         drawText('Score: %s' % score, font, windowSurface, 10, 30)
@@ -277,10 +329,15 @@ while True:
         drawText('Press Enter to start the game again, or Escape to exit.', font, windowSurface, (WINDOW_WIDTH / 4) - 80,
                  (WINDOW_HEIGHT / 3) + 150)
         pygame.display.update()
-        wait_for_player_to_press_key()
-    if player_has_hit_zombie(playerRect, zombies):
+        waitForPlayerKeyPress()
+    if playerHasHitZombie(playerRect, zombies):
         NORMAL_ZOMBIE_SPEED = 1
         NORMAL_ZOMBIE_SPEED / 1
+        MUST_KILL = 100
+        if Music:
+            fun_music.stop()
+            main.stop()
+            main_menu.play()
         windowSurface.blit(rescaledBackground, (0, 0))
         windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
         drawText('Score: %s' % score, font, windowSurface, 10, 30)
@@ -290,4 +347,4 @@ while True:
         drawText('Press Enter to start the game again, or Escape to exit.', font, windowSurface, (WINDOW_WIDTH / 4) - 80,
                  (WINDOW_HEIGHT / 3) + 150)
         pygame.display.update()
-        wait_for_player_to_press_key()
+        waitForPlayerKeyPress()
