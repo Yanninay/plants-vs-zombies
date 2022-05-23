@@ -21,6 +21,8 @@ ADD_NEW_KIND_ZOMBIE = ADD_NEW_ZOMBIE_RATE
 NORMAL_ZOMBIE_SPEED = 1
 NEW_KIND_ZOMBIE_SPEED = NORMAL_ZOMBIE_SPEED / 1
 
+CHEAT_ACTIVE = False
+
 PLAYER_MOVE_RATE = 15
 BULLET_SPEED = 10
 ADD_NEW_BULLET_RATE = 15
@@ -33,6 +35,7 @@ MUST_KILL = 100 # I created this variable solely for the convenience of showing 
 
 
 def terminate():
+    print("Thanks for playing!")
     pygame.quit()
     sys.exit()
 
@@ -41,6 +44,7 @@ def waitForPlayerKeyPress():
     global Music
     global MUST_KILL
     global DEFAULT_MUSIC
+    global CHEAT_ACTIVE
     while True:
         for event_ in pygame.event.get():
             if event_.type == QUIT:
@@ -50,8 +54,8 @@ def waitForPlayerKeyPress():
                     terminate()
                 if event_.key == K_RETURN:
                     return
-                if event_.key == K_t:
-                    print('Welcome to Plants VS Zombies. This is the game Plants VS Zombies developed by Yanninay. Settings:\nM - music off\nL - developer mode\nG - Github')
+                if event_.key == K_h:
+                    print('Welcome to Plants VS Zombies. This is the game Plants VS Zombies developed by Yanninay. Settings:\nP - how to play\nM - music off\nL - developer mode\nG - Github\nC - Cheats')
                 if event_.key == K_m:
                     if not Music:
                         main_menu.play()
@@ -65,6 +69,11 @@ def waitForPlayerKeyPress():
                     print("Okay, now you need to kill", MUST_KILL, "zombies to speed up the game. But keep in mind, I'll return the number of zombies you need to kill to the previous value, to make it easier for you to play.")
                 if event_.key == K_g:
                     print("https://github.com/Yanninay/plants-vs-zombies")
+                if event_.key == K_c:
+                    print("You have activated the cheats. Now during the game by pressing the C key you can remove all zombies from the playing field")
+                    CHEAT_ACTIVE = True
+                if event_.key == K_p:
+                    print("The essence of the game is very simple. You have to defeat all the zombies who are trying to eat you, and not let them go beyond the map. Move using the W and S buttons or the arrow keys. Press the space bar to shoot. ")
 
                     
 
@@ -133,7 +142,7 @@ windowSurface.blit(rescaledBackground, (0, 0))
 windowSurface.blit(playerImage, (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70))
 drawText('Zombie VS Plants By Yanninay', font, windowSurface, (WINDOW_WIDTH / 4), (WINDOW_HEIGHT / 4))
 drawText('Press Enter to start', font, windowSurface, (WINDOW_WIDTH / 3) - 10, (WINDOW_HEIGHT / 3) + 50)
-drawText('Press T for settings', font, windowSurface, (WINDOW_WIDTH / 3) - 40, (WINDOW_HEIGHT / 3) + 90)
+drawText('Press H for settings', font, windowSurface, (WINDOW_WIDTH / 3) - 40, (WINDOW_HEIGHT / 3) + 90)
 pygame.display.update()
 waitForPlayerKeyPress()
 while True:
@@ -191,13 +200,18 @@ while True:
                         main.stop()
                         Music = False
                     else:
-                        if score >= 100:
+                        if score >= MUST_KILL:
                             fun_music.play()
                             Music = True
                         else:
                             main.play()
                             Music = True
-
+                elif event.key == K_c:
+                    if CHEAT_ACTIVE:
+                        for z in zombies:
+                            zombies.remove(z)
+                        for c in newKindZombies:
+                            newKindZombies.remove(c)
 
         zombieAddCounter += 1
         if zombieAddCounter == ADD_NEW_KIND_ZOMBIE:
@@ -328,6 +342,10 @@ while True:
                  (WINDOW_HEIGHT / 3) + 100)
         drawText('Press Enter to start the game again, or Escape to exit.', font, windowSurface, (WINDOW_WIDTH / 4) - 80,
                  (WINDOW_HEIGHT / 3) + 150)
+        if CHEAT_ACTIVE:
+            drawText('The cheats were disabled after your defeat', font, windowSurface, (WINDOW_WIDTH / 6) - 100,
+                 (WINDOW_HEIGHT / 3) + 300)
+            CHEAT_ACTIVE = False
         pygame.display.update()
         waitForPlayerKeyPress()
     if playerHasHitZombie(playerRect, zombies):
@@ -346,5 +364,9 @@ while True:
                  (WINDOW_HEIGHT / 3) + 100)
         drawText('Press Enter to start the game again, or Escape to exit.', font, windowSurface, (WINDOW_WIDTH / 4) - 80,
                  (WINDOW_HEIGHT / 3) + 150)
+        if CHEAT_ACTIVE:
+            drawText('The cheats were disabled after your defeat', font, windowSurface, (WINDOW_WIDTH / 6) - 100,
+                 (WINDOW_HEIGHT / 3) + 300)
+            CHEAT_ACTIVE = False
         pygame.display.update()
         waitForPlayerKeyPress()
